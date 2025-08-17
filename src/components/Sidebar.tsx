@@ -9,7 +9,8 @@ import {
   ChatBubbleLeftRightIcon,
   MicrophoneIcon,
   DocumentCheckIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Voice Applications', href: '/applications', icon: MicrophoneIcon },
   { name: 'ARF Submissions', href: '/submissions', icon: DocumentCheckIcon },
   { name: 'Commission Analytics', href: '/analytics', icon: ChartBarIcon },
+  { name: 'Manage', href: '/manage', icon: Cog6ToothIcon },
 ];
 
 export default function Sidebar() {

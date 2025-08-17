@@ -62,6 +62,10 @@ export async function POST(request: NextRequest) {
       try {
         console.log('Triggering n8n webhook:', n8nWebhookUrl);
         
+        // Create AbortController for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const n8nFetchResponse = await fetch(n8nWebhookUrl, {
           method: 'POST',
           headers: { 
@@ -69,8 +73,10 @@ export async function POST(request: NextRequest) {
             'User-Agent': 'PipelinePro-Discovery/1.0'
           },
           body: JSON.stringify(payload),
-          timeout: 10000 // 10 second timeout
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
         
         if (!n8nFetchResponse.ok) {
           throw new Error(`n8n webhook failed: ${n8nFetchResponse.status} ${n8nFetchResponse.statusText}`);
@@ -104,6 +110,8 @@ export async function POST(request: NextRequest) {
       } catch (webhookError) {
         console.error('n8n webhook error:', webhookError);
         
+        const errorMessage = webhookError instanceof Error ? webhookError.message : 'Unknown error';
+        
         // Log webhook failure but don't fail the entire request
         await supabase
           .from('activity_log')
@@ -111,10 +119,10 @@ export async function POST(request: NextRequest) {
             entity_type: 'prospect',
             entity_id: '00000000-0000-0000-0000-000000000000',
             action: 'n8n_webhook_failed',
-            description: `n8n discovery webhook failed: ${webhookError.message}`,
+            description: `n8n discovery webhook failed: ${errorMessage}`,
             metadata: {
               webhook_url: n8nWebhookUrl,
-              error: webhookError.message,
+              error: errorMessage,
               payload
             }
           }]);
@@ -153,7 +161,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get recent discovery activities from the activity log
     const { data: activities, error } = await supabase

@@ -105,7 +105,7 @@ export default function ActivityFeed() {
     return date.toLocaleDateString();
   };
 
-  const getActivityIcon = (entityType: string, action: string) => {
+  const getActivityIcon = (entityType: string) => {
     if (entityType === 'prospect') return '👤';
     if (entityType === 'conversation') return '💬';
     if (entityType === 'application') return '📄';
@@ -152,7 +152,7 @@ export default function ActivityFeed() {
             <div key={activity.id} className="flex items-start space-x-3 pb-4 border-b border-gray-100 last:border-b-0">
               <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                 <span className="text-sm">
-                  {getActivityIcon(activity.entity_type, activity.action)}
+                  {getActivityIcon(activity.entity_type)}
                 </span>
               </div>
               
