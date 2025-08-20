@@ -16,11 +16,13 @@ function AutomatedDiscovery() {
     'Restaurants',
     'Auto Repair', 
     'Medical/Dental',
-    'Construction',
     'Retail',
     'Professional Services',
     'Manufacturing',
-    'Transportation'
+    'Legal',
+    'Barber/Beauty',
+    'Computer Software/IT',
+    'Wholesale'
   ];
 
   const handleIndustryChange = (industry: string) => {
