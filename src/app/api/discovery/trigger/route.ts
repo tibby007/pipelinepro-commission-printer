@@ -7,25 +7,25 @@ export async function POST(request: NextRequest) {
     console.log('Discovery trigger payload:', payload);
     
     // Validate required fields
-    const { industries, locations, prospects_per_industry, total_prospects, estimated_value } = payload;
+    const { leadCount, industry, location, apolloSearchUrl } = payload;
     
-    if (!industries || !Array.isArray(industries) || industries.length === 0) {
+    if (!industry || typeof industry !== 'string') {
       return NextResponse.json(
-        { error: 'Industries are required and must be a non-empty array' }, 
+        { error: 'Industry is required and must be a string' }, 
         { status: 400 }
       );
     }
 
-    if (!locations || !Array.isArray(locations) || locations.length === 0) {
+    if (!location || typeof location !== 'string') {
       return NextResponse.json(
-        { error: 'Locations are required and must be a non-empty array' }, 
+        { error: 'Location is required and must be a string' }, 
         { status: 400 }
       );
     }
 
-    if (!prospects_per_industry || prospects_per_industry < 1) {
+    if (!leadCount || leadCount < 1) {
       return NextResponse.json(
-        { error: 'Prospects per industry must be at least 1' }, 
+        { error: 'Lead count must be at least 1' }, 
         { status: 400 }
       );
     }
@@ -37,13 +37,12 @@ export async function POST(request: NextRequest) {
         entity_type: 'prospect',
         entity_id: '00000000-0000-0000-0000-000000000000', // Placeholder for discovery actions
         action: 'discovery_triggered',
-        description: `Automated discovery started: ${total_prospects} prospects across ${industries.length} industries`,
+        description: `Automated discovery started: ${leadCount} prospects for ${industry} in ${location}`,
         metadata: {
-          industries,
-          locations,
-          prospects_per_industry,
-          total_prospects,
-          estimated_value,
+          leadCount,
+          industry,
+          location,
+          apolloSearchUrl,
           trigger_source: payload.trigger_source || 'api',
           timestamp: payload.timestamp || new Date().toISOString()
         }
@@ -138,11 +137,10 @@ export async function POST(request: NextRequest) {
         ? 'Discovery workflow triggered successfully in n8n' 
         : 'Discovery logged successfully (n8n webhook not configured)',
       parameters: {
-        industries,
-        locations,
-        prospects_per_industry,
-        total_prospects,
-        estimated_value
+        leadCount,
+        industry,
+        location,
+        apolloSearchUrl
       },
       n8n_webhook_url: n8nWebhookUrl || null,
       webhook_triggered: webhookTriggered,

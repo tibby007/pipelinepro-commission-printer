@@ -73,13 +73,10 @@ function AutomatedDiscovery() {
     
     try {
       const payload = {
-        industries: selectedIndustries,
-        locations: locations.filter(l => l.trim()),
-        prospects_per_industry: prospectsPerIndustry,
-        total_prospects: getTotalProspects(),
-        estimated_value: getEstimatedValue(),
-        trigger_source: 'dashboard',
-        timestamp: new Date().toISOString()
+        leadCount: prospectsPerIndustry || 25,
+        industry: selectedIndustries[0] || 'Medical/Dental', 
+        location: locations.filter(l => l.trim())[0] || 'Atlanta, GA',
+        apolloSearchUrl: "https://app.apollo.io/#/people?page=1&personTitles[]=owner&personSeniorities[]=owner&personSeniorities[]=founder&personSeniorities[]=c_suite&personSeniorities[]=partner&personSeniorities[]=director&personLocations[]=United%20States"
       };
 
       const response = await fetch('/api/discovery/trigger', {
