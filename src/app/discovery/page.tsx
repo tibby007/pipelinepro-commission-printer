@@ -19,8 +19,6 @@ function AutomatedDiscovery() {
     'Retail',
     'Professional Services',
     'Manufacturing',
-    'Legal',
-    'Barber/Beauty',
     'Computer Software/IT',
     'Wholesale'
   ];
