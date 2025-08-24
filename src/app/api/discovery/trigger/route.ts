@@ -52,20 +52,20 @@ export async function POST(request: NextRequest) {
       console.error('Failed to log discovery activity:', logError);
     }
 
-    // Trigger n8n workflow via webhook
-    const n8nWebhookUrl = process.env.N8N_DISCOVERY_WEBHOOK_URL;
+    // Trigger discovery workflow via webhook
+    const webhookUrl = process.env.DISCOVERY_WEBHOOK_URL;
     let n8nResponse = null;
     let webhookTriggered = false;
 
-    if (n8nWebhookUrl) {
+    if (webhookUrl) {
       try {
-        console.log('Triggering n8n webhook:', n8nWebhookUrl);
+        console.log('Triggering discovery webhook:', webhookUrl);
         
         // Create AbortController for timeout handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const n8nFetchResponse = await fetch(n8nWebhookUrl, {
+        const webhookResponse = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -77,19 +77,19 @@ export async function POST(request: NextRequest) {
 
         clearTimeout(timeoutId);
         
-        if (!n8nFetchResponse.ok) {
-          throw new Error(`n8n webhook failed: ${n8nFetchResponse.status} ${n8nFetchResponse.statusText}`);
+        if (!webhookResponse.ok) {
+          throw new Error(`Discovery webhook failed: ${webhookResponse.status} ${webhookResponse.statusText}`);
         }
 
-        // Try to parse n8n response, but don't fail if it's not JSON
+        // Try to parse webhook response, but don't fail if it's not JSON
         try {
-          n8nResponse = await n8nFetchResponse.json();
+          n8nResponse = await webhookResponse.json();
         } catch {
-          n8nResponse = { status: 'accepted', text: await n8nFetchResponse.text() };
+          n8nResponse = { status: 'accepted', text: await webhookResponse.text() };
         }
 
         webhookTriggered = true;
-        console.log('n8n webhook triggered successfully:', n8nResponse);
+        console.log('Discovery webhook triggered successfully:', n8nResponse);
         
         // Log successful webhook trigger
         await supabase
@@ -97,17 +97,17 @@ export async function POST(request: NextRequest) {
           .insert([{
             entity_type: 'prospect',
             entity_id: '00000000-0000-0000-0000-000000000000',
-            action: 'n8n_webhook_triggered',
-            description: `n8n discovery webhook triggered successfully`,
+            action: 'discovery_webhook_triggered',
+            description: `Discovery webhook triggered successfully`,
             metadata: {
-              webhook_url: n8nWebhookUrl,
-              n8n_response: n8nResponse,
+              webhook_url: webhookUrl,
+              webhook_response: n8nResponse,
               payload
             }
           }]);
 
       } catch (webhookError) {
-        console.error('n8n webhook error:', webhookError);
+        console.error('Discovery webhook error:', webhookError);
         
         const errorMessage = webhookError instanceof Error ? webhookError.message : 'Unknown error';
         
@@ -117,34 +117,34 @@ export async function POST(request: NextRequest) {
           .insert([{
             entity_type: 'prospect',
             entity_id: '00000000-0000-0000-0000-000000000000',
-            action: 'n8n_webhook_failed',
-            description: `n8n discovery webhook failed: ${errorMessage}`,
+            action: 'discovery_webhook_failed',
+            description: `Discovery webhook failed: ${errorMessage}`,
             metadata: {
-              webhook_url: n8nWebhookUrl,
+              webhook_url: webhookUrl,
               error: errorMessage,
               payload
             }
           }]);
       }
     } else {
-      console.log('No N8N_DISCOVERY_WEBHOOK_URL configured, skipping webhook trigger');
+      console.log('No DISCOVERY_WEBHOOK_URL configured, skipping webhook trigger');
     }
 
     const webhookResponse = {
       success: true,
       workflow_id: `discovery_${Date.now()}`,
       message: webhookTriggered 
-        ? 'Discovery workflow triggered successfully in n8n' 
-        : 'Discovery logged successfully (n8n webhook not configured)',
+        ? 'Discovery workflow triggered successfully' 
+        : 'Discovery logged successfully (webhook not configured)',
       parameters: {
         leadCount,
         industry,
         location,
         apolloSearchUrl
       },
-      n8n_webhook_url: n8nWebhookUrl || null,
+      webhook_url: webhookUrl || null,
       webhook_triggered: webhookTriggered,
-      n8n_response: n8nResponse,
+      webhook_response: n8nResponse,
       status: webhookTriggered ? 'triggered' : 'queued'
     };
 
